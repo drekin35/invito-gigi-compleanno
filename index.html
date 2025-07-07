@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invito Compleanno Gigi - Pool Party!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom, #87CEEB, #4682B4); /* Azzurro cielo a blu acciaio */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden; /* Nasconde le scrollbar a causa dell'animazione del canvas */
+        }
+        .invitation-card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            z-index: 10; /* Assicura che la card sia sopra il canvas */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0; /* Invia il canvas sullo sfondo */
+            pointer-events: none; /* Permette ai clic di passare agli elementi sottostanti */
+        }
+        .button-primary {
+            background-color: #007BFF; /* Blu brillante */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+        }
+        .button-primary:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        .button-secondary {
+            background-color: #28A745; /* Verde per RSVP */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+        .button-secondary:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="poolCanvas"></canvas>
+
+    <div class="invitation-card">
+        <h1 class="text-4xl font-bold text-blue-800">🎉 Pool Party di Gigi! 🎉</h1>
+        <p class="text-lg text-gray-700">Unisciti a noi per festeggiare il 10° compleanno di Gigi!</p>
+        <p class="text-xl font-semibold text-gray-800">🗓️ Giovedì 8 Agosto 2025</p>
+        <p class="text-xl font-semibold text-gray-800">⏰ Dalle 9:30 alle 18:00</p>
+        <p class="text-lg text-gray-700">📍 Preparati a tuffarti e a divertirti un mondo!</p>
+
+        <a href="https://g.co/kgs/yuYhRtY" target="_blank" class="button-primary no-underline block mx-auto w-fit">
+            Indicazioni Stradali
+        </a>
+
+        <div class="flex flex-col sm:flex-row justify-center gap-4 mt-4">
+            <!-- Sostituito il pulsante RSVP con un link a Google Moduli -->
+            <a href="https://forms.gle/V2HzMkmwGLooMzzi8" target="_blank" class="button-secondary no-underline block mx-auto w-fit">
+                Conferma la tua presenza (Google Moduli)
+            </a>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- Canvas Animation ---
+        const canvas = document.getElementById('poolCanvas');
+        const ctx = canvas.getContext('2d');
+        let bubbles = [];
+        let floats = [];
+
+        // Ridimensiona il canvas per riempire la finestra
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); // Ridimensionamento iniziale
+
+        // Proprietà delle bolle
+        class Bubble {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100; // Inizia sotto il canvas
+                this.radius = Math.random() * 5 + 2; // Da 2 a 7
+                this.speed = Math.random() * 1 + 0.5; // Da 0.5 a 1.5
+                this.opacity = Math.random() * 0.5 + 0.3; // Da 0.3 a 0.8
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+
+            update() {
+                this.y -= this.speed;
+                if (this.y < -this.radius) {
+                    this.y = canvas.height + this.radius;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+        }
+
+        // Proprietà dei galleggianti (semplici cerchi/rettangoli)
+        class Float {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 30 + 20; // Da 20 a 50
+                this.color = `hsl(${Math.random() * 360}, 70%, 70%)`; // Colore pastello casuale
+                this.speedX = (Math.random() - 0.5) * 1; // Da -0.5 a 0.5
+                this.speedY = (Math.random() - 0.5) * 1; // Da -0.5 a 0.5
+                this.shape = Math.random() > 0.5 ? 'circle' : 'rect';
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = 0.7; // Leggermente trasparente
+                if (this.shape === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size * 0.7);
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Rimbalza sui bordi
+                if (this.x + this.size / 2 > canvas.width || this.x - this.size / 2 < 0) {
+                    this.speedX *= -1;
+                }
+                if (this.y + this.size / 2 > canvas.height || this.y - this.size / 2 < 0) {
+                    this.speedY *= -1;
+                }
+            }
+        }
+
+        // Crea bolle e galleggianti iniziali
+        for (let i = 0; i < 50; i++) {
+            bubbles.push(new Bubble());
+        }
+        for (let i = 0; i < 5; i++) {
+            floats.push(new Float());
+        }
+
+        // Loop di animazione
+        const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Cancella il canvas
+
+            bubbles.forEach(bubble => {
+                bubble.update();
+                bubble.draw();
+            });
+
+            floats.forEach(float => {
+                float.update();
+                float.draw();
+            });
+
+            requestAnimationFrame(animate);
+        };
+
+        // Inizializza tutto al caricamento della finestra
+        window.onload = async function () {
+            animate(); // Avvia l'animazione del canvas
+        };
+    </script>
+</body>
+</html>
